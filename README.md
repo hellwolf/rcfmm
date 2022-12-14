@@ -1,2 +1,8 @@
-# rcfmm
-Reactive Constant-Function Market Makers (RCFMM) Monorepo: the toy model, EVM contracts and super app (for superfluid protocol).
+REX (Reactive Exchange) Monorepo
+================================
+
+# Toy models
+
+# EVM Contracts
+
+# Super App (For Superfluid Protocol)
