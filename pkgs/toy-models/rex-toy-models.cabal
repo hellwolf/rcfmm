@@ -19,36 +19,40 @@ common warnings
 
 -- the toy models
 library
+    default-language: Haskell2010
     import:           warnings
-    exposed-modules:  Finance.Trading.Models.CoreTypes
-                      Finance.Trading.Models.ReactiveConstantFunctionMarketMaker
-                      Finance.Trading.Models.ReactiveExchange
+    hs-source-dirs:   src
+    exposed-modules:
+        Finance.Trading.Models.CoreTypes
+        Finance.Trading.Models.ReactiveConstantFunctionMarketMaker
+        Finance.Trading.Models.ReactiveExchange
     -- other-modules:
     -- other-extensions:
     build-depends:    base ^>=4.17.0.0
-    hs-source-dirs:   src
-    default-language: Haskell2010
 
 test-suite rex-toy-models-test
-    import:           warnings
     default-language: Haskell2010
-    -- other-modules:
-    -- other-extensions:
     type:             exitcode-stdio-1.0
+    import:           warnings
+    other-modules:
+        Finance.Trading.Models.ReactiveConstantFunctionMarketMaker_prop
+    -- other-extensions:
     hs-source-dirs:   test
     main-is:          Main.hs
     build-depends:
         base ^>=4.17.0.0,
-        rex-toy-models
+        rex-toy-models,
+        QuickCheck >=2.13,
+        hspec >=2.0,
+        HUnit >=1.6.0.0
 
 -- TREX (Toy Reactive EXchange)
 executable trex
+    default-language: Haskell2010
     import:           warnings
+    hs-source-dirs:   app
     main-is:          Main.hs
-    -- other-modules:
     -- other-extensions:
     build-depends:
         base ^>=4.17.0.0,
         rex-toy-models
-    hs-source-dirs:   app
-    default-language: Haskell2010
