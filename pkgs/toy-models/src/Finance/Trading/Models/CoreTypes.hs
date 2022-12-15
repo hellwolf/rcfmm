@@ -1,10 +1,14 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Finance.Trading.Models.CoreTypes where
 
-newtype Timestamp = Timestamp Integer
+newtype Timestamp = Timestamp Integer deriving (Eq, Ord, Num)
 
-newtype Amount = Amount Integer
+newtype NumType = NumType Double deriving (Eq, Ord, Num, Fractional, Real, RealFrac)
 
-newtype FlowRate = FlowRate Integer
+type Amount = NumType
+
+type FlowRate = NumType
 
 data LiquidityPool = LiquidityPool
   { liquidity :: Amount
@@ -12,6 +16,7 @@ data LiquidityPool = LiquidityPool
   }
 
 data PairedLiquidityPool = PairedLiquidityPool
-  { liquidityPoolA :: LiquidityPool
+  { settledAt      :: Timestamp
+  , liquidityPoolA :: LiquidityPool
   , liquidityPoolB :: LiquidityPool
   }
