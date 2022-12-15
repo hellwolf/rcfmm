@@ -1,0 +1,54 @@
+cabal-version:      3.4
+name:               rex-toy-models
+version:            0.1.0.0
+synopsis:           Toy models of reactive exchange
+license:            MIT
+license-file:       LICENSE
+author:             Miao, ZhiCheng
+maintainer:         zhicheng.miao@gmail.com
+category:           Finance
+build-type:         Simple
+
+-- Extra doc files to be distributed with the package, such as a CHANGELOG or a README.
+extra-doc-files:    CHANGELOG.md
+-- Extra source files to be distributed with the package, such as examples, or a tutorial module.
+-- extra-source-files:
+
+common warnings
+    ghc-options: -Wall
+
+-- the toy models
+library
+    import:           warnings
+    exposed-modules:  Finance.Trading.Models.CoreTypes
+                      Finance.Trading.Models.ReactiveConstantFunctionMarketMaker
+                      Finance.Trading.Models.ReactiveExchange
+    -- other-modules:
+    -- other-extensions:
+    build-depends:    base ^>=4.17.0.0
+    hs-source-dirs:   src
+    default-language: Haskell2010
+
+test-suite rex-toy-models-test
+    import:           warnings
+    default-language: Haskell2010
+    -- other-modules:
+    -- other-extensions:
+    type:             exitcode-stdio-1.0
+    hs-source-dirs:   test
+    main-is:          Main.hs
+    build-depends:
+        base ^>=4.17.0.0,
+        rex-toy-models
+
+-- TREX (Toy Reactive EXchange)
+executable trex
+    import:           warnings
+    main-is:          Main.hs
+    -- other-modules:
+    -- other-extensions:
+    build-depends:
+        base ^>=4.17.0.0,
+        rex-toy-models
+    hs-source-dirs:   app
+    default-language: Haskell2010
