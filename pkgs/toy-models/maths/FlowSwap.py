@@ -53,8 +53,8 @@ def solve_rtb_bidir():
         L_b + cf_b + 1/q * cf_a
     )
     sols = solve(clp, q)
-    print("f_a2b =", (1/q * cf_a).subs(sols[0]))
-    print("f_b2a =", (q * cf_b).subs(sols[0]))
+    print("L_aΔ =", cf_a + (q * cf_b).subs(sols[0]))
+    print("L_bΔ =", cf_b + (1/q * cf_a).subs(sols[0]))
     print("\n")
 
 def solve_ss_rtb_bidir():
@@ -70,8 +70,8 @@ def solve_ss_rtb_bidir():
         L_b + cf_b + 1/q * cf_a
     )
     sols = solve(amm, q)
-    print("f_a2b =", (1/q * cf_a).subs(sols[0]))
-    print("f_b2a =", (q * cf_b).subs(sols[0]))
+    print("L_aΔ =", cf_a + (1/q * cf_a).subs(sols[0]))
+    print("L_bΔ =", cf_b + (q * cf_b).subs(sols[0]))
     print("\n")
 
 solve_rtb_unidir()

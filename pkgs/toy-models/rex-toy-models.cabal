@@ -15,41 +15,46 @@ extra-doc-files:    CHANGELOG.md
 -- extra-source-files:
 
 common warnings
-    ghc-options: -Wall
+    ghc-options:
+        -Wall
+        -Wno-missing-signatures
 
 -- the toy models
 library
-    default-language: Haskell2010
     import:           warnings
+    default-language: GHC2021
     hs-source-dirs:   src
     exposed-modules:
         Finance.Trading.Models.CoreTypes
-        Finance.Trading.Models.ReactiveConstantFunctionMarketMaker
+        Finance.Trading.Models.ReactiveConstantLiquidityProductMarketMaker
         Finance.Trading.Models.ReactiveExchange
     -- other-modules:
     -- other-extensions:
-    build-depends:    base ^>=4.17.0.0
+    build-depends:
+        base ^>=4.17.0.0,
+        data-default
 
 test-suite rex-toy-models-test
-    default-language: Haskell2010
-    type:             exitcode-stdio-1.0
     import:           warnings
+    default-language: GHC2021
+    type:             exitcode-stdio-1.0
     other-modules:
-        Finance.Trading.Models.ReactiveConstantFunctionMarketMaker_prop
+        Finance.Trading.Models.ReactiveConstantLiquidityProductMarketMaker_prop
     -- other-extensions:
     hs-source-dirs:   test
     main-is:          Main.hs
     build-depends:
         base ^>=4.17.0.0,
-        rex-toy-models,
         QuickCheck >=2.13,
         hspec >=2.0,
-        HUnit >=1.6.0.0
+        HUnit >=1.6.0.0,
+        math-extras,
+        rex-toy-models
 
 -- TREX (Toy Reactive EXchange)
 executable trex
-    default-language: Haskell2010
     import:           warnings
+    default-language: GHC2021
     hs-source-dirs:   app
     main-is:          Main.hs
     -- other-extensions:
