@@ -1,7 +1,7 @@
-REX (Reactive Exchange) Monorepo
-================================
+T-REX (Toy Reactive Exchange) Monorepo
+======================================
 
-# Toy models
+# Toy Models
 
 # EVM Contracts
 
