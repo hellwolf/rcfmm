@@ -1,5 +1,5 @@
 cabal-version:      3.4
-name:               rex-toy-models
+name:               trex-toy-models
 version:            0.1.0.0
 synopsis:           Toy models of reactive exchange
 license:            MIT
@@ -34,7 +34,7 @@ library
         base ^>=4.17.0.0,
         data-default
 
-test-suite rex-toy-models-test
+test-suite trex-toy-models-test
     import:           warnings
     default-language: GHC2021
     type:             exitcode-stdio-1.0
@@ -49,7 +49,7 @@ test-suite rex-toy-models-test
         hspec >=2.0,
         HUnit >=1.6.0.0,
         math-extras,
-        rex-toy-models
+        trex-toy-models
 
 -- TREX (Toy Reactive EXchange)
 executable trex
@@ -60,4 +60,4 @@ executable trex
     -- other-extensions:
     build-depends:
         base ^>=4.17.0.0,
-        rex-toy-models
+        trex-toy-models

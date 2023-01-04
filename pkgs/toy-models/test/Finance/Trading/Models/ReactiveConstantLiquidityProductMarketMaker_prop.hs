@@ -14,37 +14,48 @@ import           Finance.Trading.Models.ReactiveConstantLiquidityProductMarketMa
 deriving instance Arbitrary Timestamp
 deriving instance Arbitrary NumType
 
+pool_a_delta p p' = (settledLiquidity.liquidityPoolA) p' - (settledLiquidity.liquidityPoolA) p
+pool_b_delta p p' = (settledLiquidity.liquidityPoolB) p' - (settledLiquidity.liquidityPoolB) p
+fuzz_eq x y = coerce x ~= coerce y
+
 add_remove_same_liquidity (NonZero m) (NonZero n) x =
-    coerce x1 ~= coerce x && coerce x2 ~= coerce x &&
-    coerce y1 ~= coerce y2 &&
-    coerce clp p ~= coerce clp p2
-    where p = initPairedLiquidityPool m n 0
-          (p1, x1, y1) = addLiquidity p x 0
-          (p2, x2, y2) = removeLiquidity p1 x 0
+    clp p0 `fuzz_eq` clp p2 &&
+    pool_a_delta p0 p1 `fuzz_eq` x &&
+    pool_b_delta p0 p1 `fuzz_eq` pool_b_delta p2 p1
+    where p0 = initPairedLiquidityPool m n 0
+          (p1, _) = addLiquidity p0 x 0
+          (p2, _) = removeLiquidity p1 x 0
 
 iswap_in_and_out (NonZero m) (NonZero n) x =
-    coerce clp p ~= coerce clp p2 && coerce clp p1 ~= coerce clp p2 &&
-    coerce x1 ~= coerce x && coerce x2 ~= coerce x &&
-    coerce y1 ~= coerce y2
-    where p = initPairedLiquidityPool m n 0
-          (p1, x1, y1) = instantSwap p x 0
-          (p2, y2, x2) = instantSwap (opPLP p1) y1 0
+    clp p0 `fuzz_eq` clp p1 &&
+    clp p1 `fuzz_eq` clp p2 &&
+    (pool_a_delta p0 p1) `fuzz_eq` x &&
+    (pool_a_delta p2 p1) `fuzz_eq` x &&
+    pool_b_delta p0 p1 `fuzz_eq` pool_b_delta p2 p1
+    where p0 = initPairedLiquidityPool m n 0
+          (p1, _) = instantSwap p0 x 0
+          (p2', _) = instantSwap (opPLP p1) (pool_b_delta p1 p0) 0
+          p2 = opPLP p2'
 
 single_fswap_clp (NonZero m) (NonZero n) r tΔ =
-    coerce clp p ~= coerce clp p2 &&
-    (coerce.liquidity.liquidityPoolA) p2 ~= coerce ((liquidity.liquidityPoolA) p + aΔ)
-    where p  = initPairedLiquidityPool m n 0
-          p1 = flowSwap p (r, 0) 0
-          p2 = settle p1 tΔ
+    clp p0 `fuzz_eq` clp p1 &&
+    clp p1 `fuzz_eq` clp p2 &&
+    (settledLiquidity.liquidityPoolA) p2 `fuzz_eq` ((settledLiquidity.liquidityPoolA) p0 + aΔ)
+    where p0 = initPairedLiquidityPool m n 0
+          (p1, _) = flowSwap p0 (r, 0) 0
+          (p2, _) = settle p1 tΔ
           aΔ = r * (fromInteger.coerce)(tΔ)
 
 single_fswap_plus_iswap_clp (NonZero m) (NonZero n) x r tΔ1 tΔ2 =
-    coerce clp p ~= coerce clp p4
-    where p  = initPairedLiquidityPool m n 0
-          p1 = flowSwap p (r, 0) 0
-          p2 = settle p1 tΔ1
-          (p3, x3, y3) = instantSwap p2 x tΔ1
-          p4 = settle p3 tΔ2
+    clp p0 `fuzz_eq` clp p1 &&
+    clp p1 `fuzz_eq` clp p2 &&
+    clp p2 `fuzz_eq` clp p3 &&
+    clp p3 `fuzz_eq` clp p4
+    where p0  = initPairedLiquidityPool m n 0
+          (p1, _) = flowSwap p0 (r, 0) 0
+          (p2, _) = settle p1 tΔ1
+          (p3, _) = instantSwap p2 x tΔ1
+          (p4, _) = settle p3 tΔ2
           aΔ = r * (fromInteger.coerce)(tΔ1 + tΔ2)
 
 tests = describe "Reactive CLPMM properties" $ do

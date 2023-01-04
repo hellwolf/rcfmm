@@ -19,8 +19,8 @@ type Amount = NumType
 type FlowRate = NumType
 
 data LiquidityPool = LiquidityPool
-  { liquidity :: Amount
-  , flowRate  :: FlowRate
+  { settledLiquidity :: Amount
+  , flowRate         :: FlowRate
   } deriving stock (Generic, Show)
 deriving instance Default LiquidityPool
 
@@ -34,8 +34,8 @@ deriving instance Default PairedLiquidityPool
 initPairedLiquidityPool :: Amount -> Amount -> Timestamp -> PairedLiquidityPool
 initPairedLiquidityPool lA lB t =
     PairedLiquidityPool { settledAt = t
-                        , liquidityPoolA = def { liquidity = lA }
-                        , liquidityPoolB = def { liquidity = lB }
+                        , liquidityPoolA = def { settledLiquidity = lA }
+                        , liquidityPoolB = def { settledLiquidity = lB }
                         }
 
 -- | Opposite of the paired liquidity pool.
