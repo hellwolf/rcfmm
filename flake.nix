@@ -4,10 +4,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flakeUtils.url = "github:numtide/flake-utils";
-    # foundry.url = "github:shazow/foundry.nix";
+    foundry.url = "github:shazow/foundry.nix/monthly";
   };
 
-  outputs = { self, nixpkgs, flakeUtils } : flakeUtils.lib.eachDefaultSystem 
+  outputs = { self, nixpkgs, flakeUtils, foundry } : flakeUtils.lib.eachDefaultSystem 
   (system:
   let
     pkgs = import nixpkgs { inherit system; };

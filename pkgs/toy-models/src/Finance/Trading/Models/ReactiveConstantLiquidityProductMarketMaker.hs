@@ -1,5 +1,6 @@
 module Finance.Trading.Models.ReactiveConstantLiquidityProductMarketMaker
     ( clp
+    , distributionDelta
     , settle
     , addLiquidity
     , removeLiquidity
@@ -24,13 +25,12 @@ clp (PairedLiquidityPool _ pA pB) =
         lB = settledLiquidity pB
     in lA * lB
 
-type DistributionIndexes = (Amount, Amount)
+type DistributionDelta = (Amount, Amount)
 
--- | Settle the pool liquidity position since last settlement.
-settle :: PairedLiquidityPool
-       -> Timestamp
-       -> (PairedLiquidityPool, DistributionIndexes)
-settle (PairedLiquidityPool t pA pB) t' =
+distributionDelta :: PairedLiquidityPool
+                  -> Timestamp
+                  -> (FlowRate, FlowRate)
+distributionDelta (PairedLiquidityPool t pA pB) t' =
     let tΔ = fromInteger . coerce $ t' - t
         rA = flowRate pA
         rB = flowRate pB
@@ -38,6 +38,19 @@ settle (PairedLiquidityPool t pA pB) t' =
         lB = settledLiquidity pB
         iAΔ = (rA * tΔ + lA) * rB * tΔ / (rB * tΔ + lB)
         iBΔ = (rB * tΔ + lB) * rA * tΔ / (rA * tΔ + lA)
+    in (iAΔ, iBΔ)
+
+-- | Settle the pool liquidity position since last settlement.
+settle :: PairedLiquidityPool
+       -> Timestamp
+       -> (PairedLiquidityPool, DistributionDelta)
+settle p@(PairedLiquidityPool t pA pB) t' =
+    let tΔ = fromInteger . coerce $ t' - t
+        rA = flowRate pA
+        rB = flowRate pB
+        lA = settledLiquidity pA
+        lB = settledLiquidity pB
+        (iAΔ, iBΔ) = distributionDelta p t'
         lAΔ = rA * tΔ - iAΔ
         lBΔ = rB * tΔ - iBΔ
     in ( PairedLiquidityPool t'
@@ -50,7 +63,7 @@ settle (PairedLiquidityPool t pA pB) t' =
 change_liquidity :: (Amount -> Amount -> Amount)
                  -> PairedLiquidityPool -> Amount
                  -> Timestamp
-                 -> (PairedLiquidityPool, DistributionIndexes)
+                 -> (PairedLiquidityPool, DistributionDelta)
 change_liquidity op p lAΔ t' =
     let (PairedLiquidityPool _ pA pB, dΔ) = settle p t'
         lA = settledLiquidity pA
@@ -70,7 +83,7 @@ removeLiquidity = change_liquidity (-)
 --   * returns - New state of the pool, and the actual amount of A & B swapped.
 instantSwap :: PairedLiquidityPool -> Amount
             -> Timestamp
-            -> (PairedLiquidityPool, DistributionIndexes)
+            -> (PairedLiquidityPool, DistributionDelta)
 instantSwap p aΔ t' =
     let (PairedLiquidityPool _ pA pB, dΔ) = settle p t'
         lA = settledLiquidity pA
@@ -87,7 +100,7 @@ instantSwap p aΔ t' =
 -- | Continuously swap asset A for B at constant flow rates.
 flowSwap :: PairedLiquidityPool -> (FlowRate, FlowRate)
          -> Timestamp
-         -> (PairedLiquidityPool, DistributionIndexes)
+         -> (PairedLiquidityPool, DistributionDelta)
 flowSwap p (rAΔ, rBΔ) t'=
     let (PairedLiquidityPool _ pA pB, dΔ) = settle p t'
         rA = flowRate pA
