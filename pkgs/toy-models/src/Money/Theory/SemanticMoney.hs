@@ -82,9 +82,6 @@ instance (Integral t, Integral v, Integral u) => Default (PDIndex t v u) where d
 data PDPoolMember t v u = Integral u => PDPoolMember
     { pdpm_owned_unit :: u
     , pdpm_rtbp       :: RTBParticle t v
-    -- , pdpm_synced_at             :: t
-    -- , pdpm_synced_unit_value     :: v
-    -- , pdpm_synced_unit_flow_rate :: v
     }
 instance (Integral t, Integral v, Integral u) => Default (PDPoolMember t v u) where def = PDPoolMember 0 def
 
@@ -116,8 +113,8 @@ instance ( Integral t
          , Integral v
          ) => MonetaryUnit t v (PDPoolMemberMU t v u) where
     rtb (PDIndex _ rpi, PDPoolMember u rps) t' = (fromInteger . toInteger) u * (
-        - rtb rps (ti - ts) -- cancel out of sync real time balance between [ts:ti]
-        + rtb rpi (t' - ti) -- inclusion of real time balance between [ti:ts]
+        - rtb rps (ti - ts) -- cancel out-of-sync rtb between [ts:ti]
+        + rtb rpi (t' - ti) -- include rtb between [ti:ts]
         ) where ti = rtb_settled_at rpi
                 ts = rtb_settled_at rps
 
