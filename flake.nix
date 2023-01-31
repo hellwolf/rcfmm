@@ -22,7 +22,8 @@
     packageToyModelInputs = with pkgs; [
       # haskell build tools
       cabal-install
-      haskell.compiler.ghc94
+      haskell.compiler.ghc944
+      haskell.packages.ghc944.haskell-language-server
       # haskell dev tools
       hlint
       stylish-haskell

@@ -25,6 +25,7 @@ library
     default-language: GHC2021
     hs-source-dirs:   src
     exposed-modules:
+        Money.Theory.SemanticMoney
         Finance.Trading.Models.CoreTypes
         Finance.Trading.Models.ReactiveConstantLiquidityProductMarketMaker
         Finance.Trading.Models.ReactiveExchange
@@ -40,6 +41,7 @@ test-suite trex-toy-models-test
     type:             exitcode-stdio-1.0
     other-modules:
         Finance.Trading.Models.ReactiveConstantLiquidityProductMarketMaker_prop
+        Money.Theory.SemanticMoney_prop
     -- other-extensions:
     hs-source-dirs:   test
     main-is:          Main.hs
@@ -48,6 +50,8 @@ test-suite trex-toy-models-test
         QuickCheck >=2.13,
         hspec >=2.0,
         HUnit >=1.6.0.0,
+        data-default,
+        containers,
         math-extras,
         trex-toy-models
 
