@@ -122,8 +122,8 @@ pdp_update_member unit' t' (idx, pm) = (idx', pm')
 instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
          ) => MonetaryUnit mt t v (PDPoolMemberMU mt t v u) where
     rtb (PDIndex _ rpi, PDPoolMember u rps) t' = (fromInteger . toInteger) u * (
-        - rtb rps (ti - ts) -- cancel out-of-sync member's rtb between [ts:ti]
-        + rtb rpi t'        -- include index's rtb
+        rtb rpi t' +      -- include index's rtb
+        rtb rps (ts - ti) -- cancel out-of-sync member's rtb between [ts:ti]
         ) where ti = rtb_settled_at rpi
                 ts = rtb_settled_at rps
 
