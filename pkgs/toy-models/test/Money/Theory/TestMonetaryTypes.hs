@@ -11,15 +11,15 @@ instance MonetaryTypes TestMonetaryTypes where
     type MT_VALUE TestMonetaryTypes = Integer
     type MT_UNIT  TestMonetaryTypes = Integer
 
-deriving instance Show (RTBParticle TestMonetaryTypes Integer Integer)
+deriving instance Show (RTBParticle TestMonetaryTypes)
 
 type TestUniversalIndex = UniversalIndex TestMonetaryTypes
 deriving instance Show TestUniversalIndex
 
-type TestPDPoolIndex = PDIndex TestMonetaryTypes Integer Integer Integer
+type TestPDPoolIndex = PDIndex TestMonetaryTypes
 deriving instance Show TestPDPoolIndex
 
-type TestPDPoolMember = PDPoolMember TestMonetaryTypes Integer Integer Integer
+type TestPDPoolMember = PDPoolMember TestMonetaryTypes
 deriving instance Show TestPDPoolMember
 
 -- type TestPDPoolStore = M.Map String TestPDPoolMember

@@ -31,12 +31,9 @@ class ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
 
 class ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
       ) => Index mt t v a | a -> mt where
-    settle :: (Integral t, Integral v)
-           => a -> t -> a
-    shift1 :: Integral v
-           => a -> v -> (a, v)
-    flow1  :: Integral v
-           => a -> v -> (a, v)
+    settle :: a -> t -> a
+    shift1 :: a -> v -> (a, v)
+    flow1  :: a -> v -> (a, v)
 
 shift2 :: (Index mt t v a, Index mt t v b)
        => (a, b) -> v -> t -> (a, b)
@@ -50,21 +47,29 @@ flow2 (a, b) flowRate t = (a', b')
     where (b', flowRate') = flow1 (settle b t) flowRate
           (a', _) = flow1 (settle a t) (-flowRate')
 
-data RTBParticle mt t v = ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
-                          ) => RTBParticle
-                          { rtb_settled_at    :: t
-                          , rtb_settled_value :: v
-                          , rtb_flow_rate     :: v
-                          }
-instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
-         ) => Default (RTBParticle mt t v) where def = RTBParticle 0 0 0
+data RTBParticle mt = RTBParticle { rtb_settled_at    :: MT_TIME  mt
+                                  , rtb_settled_value :: MT_VALUE mt
+                                  , rtb_flow_rate     :: MT_VALUE mt
+                                  }
+
+rtbp_scale :: ( MonetaryTypes mt, u ~ MT_UNIT mt
+              ) => RTBParticle mt -> u -> u -> RTBParticle mt
+rtbp_scale rp old new = rp
+    { rtb_settled_value = if old' == 0 then 0 else rtb_settled_value rp * old' `div` new'
+    , rtb_flow_rate = if old' == 0 then 0 else rtb_flow_rate rp * old' `div` new'
+    }
+    where new' = (fromInteger . toInteger) new
+          old' = (fromInteger . toInteger) old
 
 instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
-         ) => MonetaryUnit mt t v (RTBParticle mt t v) where
+         ) => Default (RTBParticle mt) where def = RTBParticle 0 0 0
+
+instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
+         ) => MonetaryUnit mt t v (RTBParticle mt) where
     rtb (RTBParticle t s r) t' = r * (fromInteger . toInteger)(t' - t) + s
 
 instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
-         ) => Index mt t v (RTBParticle mt t v) where
+         ) => Index mt t v (RTBParticle mt) where
     settle idx t' = idx { rtb_settled_at = t'
                         , rtb_settled_value = rtb idx t'
                         }
@@ -77,9 +82,8 @@ instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
 -- Univeral Index
 --
 
-newtype UniversalIndex mt = UniversalIndex (RTBParticle mt (MT_TIME mt) (MT_VALUE mt))
-deriving newtype instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
-                          ) => Default (UniversalIndex mt)
+newtype UniversalIndex mt = UniversalIndex (RTBParticle mt)
+deriving newtype instance MonetaryTypes mt => Default (UniversalIndex mt)
 deriving newtype instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
                           ) => MonetaryUnit mt t v (UniversalIndex mt)
 deriving newtype instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
@@ -91,30 +95,32 @@ deriving newtype instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
 -- Proportional Distribution Index
 --
 
-data PDIndex mt t v u = ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_UNIT mt
-                        ) => PDIndex
-                        { pdidx_total_units :: u
-                        , pdidx_rtbp        :: RTBParticle mt t v
-                        }
+data PDIndex mt = PDIndex
+                  { pdidx_total_units :: MT_UNIT mt
+                  , pdidx_rtbp        :: RTBParticle mt
+                  }
 instance (MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_UNIT mt
-         ) => Default (PDIndex mt t v u) where def = PDIndex 0 def
+         ) => Default (PDIndex mt) where def = PDIndex 0 def
 
-data PDPoolMember mt t v u = (MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_UNIT mt) =>
-    PDPoolMember
-    { pdpm_owned_unit :: u
-    , pdpm_rtbp       :: RTBParticle mt t v
-    }
+data PDPoolMember mt = PDPoolMember { pdpm_owned_unit :: MT_UNIT mt
+                                    , pdpm_rtbp       :: RTBParticle mt
+                                    }
 instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_UNIT mt
-         ) => Default (PDPoolMember mt t v u) where def = PDPoolMember 0 def
+         ) => Default (PDPoolMember mt) where def = PDPoolMember 0 def
 
-type PDPoolMemberMU mt t v u = (PDIndex mt t v u, PDPoolMember mt t v u)
+type PDPoolMemberMU mt t v u = (PDIndex mt, PDPoolMember mt)
 
 pdp_update_member :: ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_UNIT mt
                      , mu ~ PDPoolMemberMU mt t v u
                      ) => u -> t -> mu -> mu
 pdp_update_member unit' t' (idx, pm) = (idx', pm')
     where unit = pdpm_owned_unit pm
-          idx' = (settle idx t') { pdidx_total_units = pdidx_total_units idx + unit' - unit }
+          tu  = pdidx_total_units idx
+          tu' = tu + unit' - unit
+          idx' = (settle idx t')
+                 { pdidx_total_units = tu'
+                 , pdidx_rtbp = rtbp_scale (pdidx_rtbp idx) tu tu'
+                 }
           pm'  = pm { pdpm_owned_unit = unit'
                     , pdpm_rtbp = pdidx_rtbp idx'
                     }
@@ -128,7 +134,7 @@ instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
                 ts = rtb_settled_at rps
 
 instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
-         ) => Index mt t v (PDIndex mt t v u) where
+         ) => Index mt t v (PDIndex mt) where
     settle idx@(PDIndex _ rpi) t' = idx { pdidx_rtbp = settle rpi t' }
 
     shift1 idx@(PDIndex tu rpi) x = (idx { pdidx_rtbp = rpi' }, ux'' * tu')
