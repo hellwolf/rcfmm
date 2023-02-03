@@ -32,7 +32,7 @@ library
     -- other-modules:
     -- other-extensions:
     build-depends:
-        base ^>=4.17.0.0,
+        base  >=4.16.0.0,
         data-default
 
 test-suite trex-toy-models-test
@@ -47,7 +47,7 @@ test-suite trex-toy-models-test
     hs-source-dirs:   test
     main-is:          Main.hs
     build-depends:
-        base ^>=4.17.0.0,
+        base  >=4.16.0.0,
         QuickCheck >=2.13,
         hspec >=2.0,
         HUnit >=1.6.0.0,
@@ -64,5 +64,5 @@ executable trex
     main-is:          Main.hs
     -- other-extensions:
     build-depends:
-        base ^>=4.17.0.0,
+        base  >=4.16.0.0,
         trex-toy-models
