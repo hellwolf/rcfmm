@@ -25,19 +25,19 @@ instance MonetaryTypes TestMonetaryTypes where
     type MT_VALUE TestMonetaryTypes = TestMValue
     type MT_UNIT  TestMonetaryTypes = TestMUnit
 
-deriving instance Show (RTBParticle TestMonetaryTypes)
+deriving instance Show (BasicParticle TestMonetaryTypes)
 
-type TesRTBParticle = RTBParticle TestMonetaryTypes
+type TesBasicParticle = BasicParticle TestMonetaryTypes
 
-type TestUniversalIndex = UniversalIndex TestMonetaryTypes TesRTBParticle
+type TestUniversalIndex = UniversalIndex TestMonetaryTypes TesBasicParticle
 deriving instance Show TestUniversalIndex
 
-type TestPDPoolIndex = PDPoolIndex TestMonetaryTypes TesRTBParticle
+type TestPDPoolIndex = PDPoolIndex TestMonetaryTypes TesBasicParticle
 deriving instance Show TestPDPoolIndex
 
-type TestPDPoolMember = PDPoolMember TestMonetaryTypes TesRTBParticle
+type TestPDPoolMember = PDPoolMember TestMonetaryTypes TesBasicParticle
 deriving instance Show TestPDPoolMember
 
-type TestPDPoolMemberMU = PDPoolMemberMU TestMonetaryTypes TesRTBParticle
+type TestPDPoolMemberMU = PDPoolMemberMU TestMonetaryTypes TesBasicParticle
 
 -- type TestPDPoolStore = M.Map String TestPDPoolMember
