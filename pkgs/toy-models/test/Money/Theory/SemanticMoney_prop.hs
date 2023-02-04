@@ -12,6 +12,19 @@ import           Money.Theory.TestMonetaryTypes
 
 
 --------------------------------------------------------------------------------
+-- Monoidal laws for universal index
+--------------------------------------------------------------------------------
+
+uidx_monoid_identity a = a == a <> (mempty :: TestUniversalIndex) &&
+                         a == (mempty :: TestUniversalIndex) <> a
+
+uidx_monoid_assoc a b c = ((a :: TestUniversalIndex) <> b) <> c == a <> (b <> c)
+
+uidx_monoid_laws = describe "uidx monoidal laws" $ do
+    it "uidx monoid identity law" $ property uidx_monoid_identity
+    it "uidx monoid associativity law" $ property uidx_monoid_assoc
+
+--------------------------------------------------------------------------------
 -- 1to1 2-primitives
 --------------------------------------------------------------------------------
 
@@ -28,7 +41,7 @@ uidx_uidx_flow2_shift2 r x = uidx_uidx_f1_f2 (flow2 r) (shift2 x)
 
 one2one_tests = describe "1to1 2-primitives" $ do
         it "uidx:uidx twice shift2" $ property uidx_uidx_twice_shift2
-        it "uidx:uidx twice flow2" $ property uidx_uidx_twice_flow2
+        it "uidx:uidx twice flow2"  $ property uidx_uidx_twice_flow2
         it "uidx:uidx shift2 flow2" $ property uidx_uidx_shift2_flow2
         it "uidx:uidx flow2 shift2" $ property uidx_uidx_flow2_shift2
 
@@ -69,5 +82,6 @@ one2n_pd_tests = describe "1toN proportional distribution 2-primitives" $ do
     it "uidx:pdidx u1 shift2 u2 flow2"  $ property uidx_pdidx_u1_shift2_u2_flow2
 
 tests = describe "Semantic money properties" $ do
+    uidx_monoid_laws
     one2one_tests
     one2n_pd_tests

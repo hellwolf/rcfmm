@@ -9,7 +9,7 @@ import           Money.Theory.SemanticMoney
 
 newtype TestTime = TestTime Integer deriving (Enum, Eq, Ord, Num, Real, Integral, Show)
 instance Arbitrary TestTime where
-    arbitrary = TestTime <$> arbitrary
+    arbitrary = TestTime . getNonNegative <$> arbitrary
 
 newtype TestMValue = TestMValue Integer deriving (Enum, Eq, Ord, Num, Real, Integral, Show)
 instance Arbitrary TestMValue where
@@ -28,9 +28,13 @@ instance MonetaryTypes TestMonetaryTypes where
 deriving instance Show (BasicParticle TestMonetaryTypes)
 
 type TesBasicParticle = BasicParticle TestMonetaryTypes
+instance Arbitrary TesBasicParticle where
+    arbitrary = BasicParticle <$> arbitrary <*> arbitrary <*> arbitrary
 
 type TestUniversalIndex = UniversalIndex TestMonetaryTypes TesBasicParticle
 deriving instance Show TestUniversalIndex
+instance Arbitrary TestUniversalIndex where
+    arbitrary = UniversalIndex <$> arbitrary
 
 type TestPDPoolIndex = PDPoolIndex TestMonetaryTypes TesBasicParticle
 deriving instance Show TestPDPoolIndex
@@ -39,5 +43,3 @@ type TestPDPoolMember = PDPoolMember TestMonetaryTypes TesBasicParticle
 deriving instance Show TestPDPoolMember
 
 type TestPDPoolMemberMU = PDPoolMemberMU TestMonetaryTypes TesBasicParticle
-
--- type TestPDPoolStore = M.Map String TestPDPoolMember

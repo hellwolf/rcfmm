@@ -92,6 +92,8 @@ flow2 flowRate = prim2 op
 
 newtype UniversalIndex mt wp = UniversalIndex wp
 deriving newtype instance ( MonetaryTypes mt
+                          , Eq wp ) => Eq (UniversalIndex mt wp)
+deriving newtype instance ( MonetaryTypes mt
                           , Semigroup wp ) => Semigroup (UniversalIndex mt wp)
 deriving newtype instance ( MonetaryTypes mt
                           , Monoid wp ) => Monoid (UniversalIndex mt wp)
@@ -173,9 +175,13 @@ data BasicParticle mt = BasicParticle { rtb_settled_at    :: MT_TIME  mt
                                       , rtb_flow_rate     :: MT_VALUE mt
                                       }
 
+deriving instance MonetaryTypes mt => Eq (BasicParticle mt)
+
 instance MonetaryTypes mt => Semigroup (BasicParticle mt) where
-    a <> (BasicParticle t2 sv2 r2) = let (BasicParticle _ sv1 r1) = settle1 t2 a
-                                     in BasicParticle t2 (sv1 + sv2) (r1 + r2)
+    a@(BasicParticle t1 _ _) <> b@(BasicParticle t2 _ _) = BasicParticle t' (sv1 + sv2) (r1 + r2)
+        where t' = max t1 t2
+              (BasicParticle _ sv1 r1) = settle1 t' a
+              (BasicParticle _ sv2 r2) = settle1 t' b
 
 instance MonetaryTypes mt => Monoid (BasicParticle mt) where
     mempty = BasicParticle 0 0 0
