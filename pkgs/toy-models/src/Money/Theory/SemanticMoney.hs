@@ -13,9 +13,9 @@ import           Data.Kind    (Type)
 -- Note:
 --   * Index related types through associated type families.
 --   * Use type family dependencies to make these types to the index type injective.
-class ( Integral (MT_TIME mt)
+class ( Integral (MT_TIME  mt) -- NonNegative
       , Integral (MT_VALUE mt)
-      , Integral (MT_UNIT  mt)
+      , Integral (MT_UNIT  mt) -- NonNegative
       ) => MonetaryTypes mt where
     mt_v_mul_t :: MT_VALUE mt -> MT_TIME mt -> MT_VALUE mt
     mt_v_mul_t v t = v * (fromInteger . toInteger) t
@@ -97,13 +97,13 @@ deriving newtype instance ( MonetaryTypes mt
                           , Semigroup wp ) => Semigroup (UniversalIndex mt wp)
 deriving newtype instance ( MonetaryTypes mt
                           , Monoid wp ) => Monoid (UniversalIndex mt wp)
+instance ( MonetaryTypes mt
+         , Monoid wp ) => Default (UniversalIndex mt wp) where def = UniversalIndex mempty
 deriving newtype instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
                           , MonetaryUnit mt t v wp ) => MonetaryUnit mt t v (UniversalIndex mt wp)
 deriving newtype instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_UNIT mt
                           , Monoid wp
                           , Index mt t v u wp ) => Index mt t v u (UniversalIndex mt wp)
-instance ( MonetaryTypes mt
-         , Monoid wp ) => Default (UniversalIndex mt wp) where def = UniversalIndex mempty
 
 --
 -- Proportional Distribution Pool
