@@ -44,6 +44,7 @@ class ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
  --   2) The adjustment must not produce new error term, or otherwise it would require recursive adjustments.
 
 class ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_UNIT mt
+      , Default ix
       ) => Index mt t v u ix | ix -> mt where
     -- settle 1-primitive
     settle1 :: t -> ix -> ix
@@ -56,8 +57,7 @@ class ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_UNIT mt
     shiftFlow1 v a = setFlow1 (v + getFlowRate a) a
 
 class ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_UNIT mt
-      , MonetaryUnit mt t v mp
-      , Index mt t v u mp
+      , MonetaryUnit mt t v mp, Index mt t v u mp, Monoid mp
       ) => MonetaryParticle mt t v u mp where
     -- align 2-primitive, right side biased
     align2 :: forall a. Index mt t v u a => u -> u -> (mp, a) -> (mp, a)
@@ -68,7 +68,7 @@ class ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_UNIT mt
 -- 2-primitive higher order function
 prim2 :: (Index mt t v u a, Index mt t v u b)
        => ((a, b) -> (a, b)) -> t -> (a, b) -> (a, b)
-prim2 op t (a, b) = op (settle1 t a, settle1 t b)
+prim2 op t' (a, b) = op (settle1 t' a, settle1 t' b)
 
 -- shift2, right side biased
 shift2 :: (Index mt t v u a, Index mt t v u b)
@@ -92,13 +92,16 @@ flow2 flowRate = prim2 op
 
 newtype UniversalIndex mt wp = UniversalIndex wp
 deriving newtype instance ( MonetaryTypes mt
-                          , Default wp) => Default (UniversalIndex mt wp)
+                          , Semigroup wp ) => Semigroup (UniversalIndex mt wp)
+deriving newtype instance ( MonetaryTypes mt
+                          , Monoid wp ) => Monoid (UniversalIndex mt wp)
 deriving newtype instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
-                          , MonetaryUnit mt t v wp) => MonetaryUnit mt t v (UniversalIndex mt wp)
+                          , MonetaryUnit mt t v wp ) => MonetaryUnit mt t v (UniversalIndex mt wp)
 deriving newtype instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_UNIT mt
-                          , Index mt t v u wp) => Index mt t v u (UniversalIndex mt wp)
-
--- TODO make it monoid
+                          , Monoid wp
+                          , Index mt t v u wp ) => Index mt t v u (UniversalIndex mt wp)
+instance ( MonetaryTypes mt
+         , Monoid wp ) => Default (UniversalIndex mt wp) where def = UniversalIndex mempty
 
 --
 -- Proportional Distribution Pool
@@ -108,7 +111,7 @@ data PDPoolIndex mt wp = PDPoolIndex { pdidx_total_units :: MT_UNIT mt
                                      , pdidx_wp          :: wp -- wrapped particle
                                      }
 instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_UNIT mt
-         , Default wp) => Default (PDPoolIndex mt wp) where def = PDPoolIndex 0 def
+         , Monoid wp ) => Default (PDPoolIndex mt wp) where def = PDPoolIndex 0 mempty
 
 instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
          , MonetaryUnit mt t v wp) => MonetaryUnit mt t v (PDPoolIndex mt wp) where
@@ -132,7 +135,7 @@ data PDPoolMember mt wp = PDPoolMember { pdpm_owned_unit    :: MT_UNIT mt
                                        , pdpm_synced_wp     :: wp
                                        }
 instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_UNIT mt
-         , Default wp) => Default (PDPoolMember mt wp) where def = PDPoolMember 0 0 def
+         , Monoid wp ) => Default (PDPoolMember mt wp) where def = PDPoolMember 0 0 mempty
 
 type PDPoolMemberMU mt wp = (PDPoolIndex mt wp, PDPoolMember mt wp)
 
@@ -141,7 +144,7 @@ pdpUpdateMember2 :: ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_
                     , MonetaryParticle mt t v u wp
                     , mu ~ PDPoolMemberMU mt wp
                     ) => u -> t -> (a, mu) -> (a, mu)
-pdpUpdateMember2 u' t' (a, (b, pm)) = (a', (b', pm'))
+pdpUpdateMember2 u' t' (a, (b, pm))  = (a', (b', pm'))
     where (PDPoolIndex tu rpi) = settle1 t' b
           (PDPoolMember u _ rpm) = pm
           tu' = tu + u' - u
@@ -169,8 +172,15 @@ data BasicParticle mt = BasicParticle { rtb_settled_at    :: MT_TIME  mt
                                       , rtb_settled_value :: MT_VALUE mt
                                       , rtb_flow_rate     :: MT_VALUE mt
                                       }
-instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
-         ) => Default (BasicParticle mt) where def = BasicParticle 0 0 0
+
+instance MonetaryTypes mt => Semigroup (BasicParticle mt) where
+    a <> (BasicParticle t2 sv2 r2) = let (BasicParticle _ sv1 r1) = settle1 t2 a
+                                     in BasicParticle t2 (sv1 + sv2) (r1 + r2)
+
+instance MonetaryTypes mt => Monoid (BasicParticle mt) where
+    mempty = BasicParticle 0 0 0
+
+instance MonetaryTypes mt => Default (BasicParticle mt) where def = mempty
 
 instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
          ) => MonetaryUnit mt t v (BasicParticle mt) where
@@ -180,15 +190,14 @@ instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt
 instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_UNIT mt
          ) => Index mt t v u (BasicParticle mt) where
     settle1 t' a = a { rtb_settled_at = t'
-                    , rtb_settled_value = rtb a t'
-                    }
+                     , rtb_settled_value = rtb a t'
+                     }
 
     shift1 x a = (a { rtb_settled_value = rtb_settled_value a + x }, x)
 
     getFlowRate = rtb_flow_rate
 
     setFlow1 r' a = (a { rtb_flow_rate = r' }, r')
-
 
 instance ( MonetaryTypes mt, t ~ MT_TIME mt, v ~ MT_VALUE mt, u ~ MT_UNIT mt
          ) => MonetaryParticle mt t v u (BasicParticle mt) where
