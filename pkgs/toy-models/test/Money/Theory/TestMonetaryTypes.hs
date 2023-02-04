@@ -27,15 +27,17 @@ instance MonetaryTypes TestMonetaryTypes where
 
 deriving instance Show (RTBParticle TestMonetaryTypes)
 
-type TestUniversalIndex = UniversalIndex TestMonetaryTypes
+type TesRTBParticle = RTBParticle TestMonetaryTypes
+
+type TestUniversalIndex = UniversalIndex TestMonetaryTypes TesRTBParticle
 deriving instance Show TestUniversalIndex
 
-type TestPDPoolIndex = PDIndex TestMonetaryTypes
+type TestPDPoolIndex = PDPoolIndex TestMonetaryTypes TesRTBParticle
 deriving instance Show TestPDPoolIndex
 
-type TestPDPoolMember = PDPoolMember TestMonetaryTypes
+type TestPDPoolMember = PDPoolMember TestMonetaryTypes TesRTBParticle
 deriving instance Show TestPDPoolMember
 
-type TestPDPoolMemberMU = PDPoolMemberMU TestMonetaryTypes
+type TestPDPoolMemberMU = PDPoolMemberMU TestMonetaryTypes TesRTBParticle
 
 -- type TestPDPoolStore = M.Map String TestPDPoolMember
