@@ -1,4 +1,3 @@
--- -*- eval: (lsp-lens-mode 0) -*-
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 
 module Money.Theory.SemanticMoney_prop (tests) where
