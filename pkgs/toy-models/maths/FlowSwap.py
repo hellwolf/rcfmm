@@ -13,20 +13,36 @@ This module defines and solves the symbolic equations for the Flow Swap Reactive
 
 from sage.all import var, assume, function, solve
 
+# let's define a handful of symbols
+
+L_a, L_b, T, r, r_a, r_b, t_0, t = var("L_a", "L_b", "T", "r", "r_a", "r_b", "t_0", "t")
+assume(t >= t_0)
+
+################################################################################
+# Reactive Constant Liquidity Product
+################################################################################
 
 def CLP(x, y, x_prime, y_prime):
     """Constant Liquidity Product Swap"""
     return x * y == x_prime * y_prime
 
-def STABLESWAP(x, y, x_prime, y_prime):
-    """Generalized Stable Swap"""
-    return x + y + (x * y) == x_prime + y_prime + (x_prime * y_prime)
+def solve_clp_a4b():
+    print("# Solve CLP equation for selling A for B instantly\n")
+    v_a = var("a_Δ")
+    v_b = var("b_Δ")
+    clp = CLP(
+        L_a,
+        L_b,
+        L_a + v_a,
+        L_b + v_b
+    )
+    sols = solve(clp, v_b)
+    assert(len(sols) == 1)
+    print(sols[0])
+    print("\n")
 
-L_a, L_b, T, r, r_a, r_b, t_0, t = var("L_a", "L_b", "T", "r", "r_a", "r_b", "t_0", "t")
-assume(t >= t_0)
-
-def solve_rtb_unidir():
-    print("# Solve rtb_unidir equation\n")
+def solve_rclp_rtb_unidir():
+    print("# Solve Reactive CLP rtb_unidir equation\n")
     f = function("f", nargs = 2)(r, t)
     clp = CLP(
         L_a,
@@ -35,13 +51,13 @@ def solve_rtb_unidir():
         L_b + f
     )
 
-    solution1 = solve(clp, f)
-    assert(len(solution1) == 1)
-    print(solution1[0])
+    sols = solve(clp, f)
+    assert(len(sols) == 1)
+    print(sols[0])
     print("\n")
 
-def solve_rtb_bidir():
-    print("# Solve rtb_bidir equation\n")
+def solve_rclp_rtb_bidir():
+    print("# Solve Reactive CLP rtb_bidir equation\n")
     cf_a = r_a * (t - t_0)
     cf_b = r_b * (t - t_0)
 
@@ -53,11 +69,23 @@ def solve_rtb_bidir():
         L_b + cf_b + 1/q * cf_a
     )
     sols = solve(clp, q)
-    print("L_aΔ =", cf_a + (q * cf_b).subs(sols[0]))
-    print("L_bΔ =", cf_b + (1/q * cf_a).subs(sols[0]))
+    print("L_{flowswap_a} =", (1/q * cf_a).subs(sols[0]))
+    print("L_{flowswap_b} =", (q * cf_b).subs(sols[0]))
     print("\n")
 
-def solve_ss_rtb_bidir():
+solve_clp_a4b()
+solve_rclp_rtb_unidir()
+solve_rclp_rtb_bidir()
+
+################################################################################
+# Reactive Stable Swap (WIP, Broken)
+################################################################################
+
+def STABLESWAP(x, y, x_prime, y_prime):
+    """Generalized Stable Swap"""
+    return x + y + (x * y) == x_prime + y_prime + (x_prime * y_prime)
+
+def solve_rss_rtb_bidir():
     print("# Solve solve_ss_rtb_bidir equation\n")
     cf_a = r_a * (t - t_0)
     cf_b = r_b * (t - t_0)
@@ -70,10 +98,8 @@ def solve_ss_rtb_bidir():
         L_b + cf_b + 1/q * cf_a
     )
     sols = solve(amm, q)
-    print("L_aΔ =", cf_a + (1/q * cf_a).subs(sols[0]))
-    print("L_bΔ =", cf_b + (q * cf_b).subs(sols[0]))
+    print("L_{aΔ} =", cf_a + (1/q * cf_a).subs(sols[0]))
+    print("L_{bΔ} =", cf_b + (q * cf_b).subs(sols[0]))
     print("\n")
 
-solve_rtb_unidir()
-solve_rtb_bidir()
-solve_ss_rtb_bidir()
+#solve_rss_rtb_bidir()
